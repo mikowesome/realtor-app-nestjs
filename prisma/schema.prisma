@@ -18,7 +18,7 @@ model User {
   password        String
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
-  userType        UserType
+  user_type        UserType
   homes           Home[]
   buyer_messages  Message[] @relation("buyer_messages")
   realtor_message Message[] @relation("realtor_messages")
