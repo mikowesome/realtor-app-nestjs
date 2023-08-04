@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { HomeResponseDto } from './dto/home.dto';
-import { PropertyType } from '@prisma/client';
+import { PropertyType, User } from '@prisma/client';
+import { UserInfo } from 'src/user/decorators/user.decorator';
 
 interface GetHomesParam {
     city?: string,
@@ -33,7 +34,7 @@ interface UpdateHomeParams {
     propertyType?: PropertyType
 }
 
-const homeSelect = {
+export const homeSelect = {
     id: true,
     address: true,
     city: true,
@@ -175,7 +176,7 @@ export class HomeService {
         })
     }
 
-    async getRealtorByHome(id: number) {
+    async getRealtorByHomeId(id: number) {
         const home = await this.prismaService.home.findUnique({
             where: {
                 id
@@ -197,5 +198,36 @@ export class HomeService {
         }
 
         return home.realtor
+    }
+
+    async inquire(buyer: UserInfo, homeId: number, message: string) {
+        const realtor = await this.getRealtorByHomeId(homeId)
+
+        return await this.prismaService.message.create({
+            data: {
+                realtor_id: realtor.id,
+                buyer_id: buyer.id,
+                home_id: homeId,
+                message
+            }
+        })
+    }
+
+    async getMessagesByHome(homeId: number) {
+        return await this.prismaService.message.findMany({
+            where: {
+                home_id: homeId
+            },
+            select: {
+                message: true,
+                buyer: {
+                    select: {
+                        name: true,
+                        phone: true,
+                        email: true
+                    }
+                }
+            }
+        })
     }
 }
